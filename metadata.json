@@ -1,0 +1,6 @@
+{
+  "name": "Family Tree Manager",
+  "description": "A modern, offline-first Family Tree Management Web Application with custom interactive visualization, photo management, relationship mapping, and local backups.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

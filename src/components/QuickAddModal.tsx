@@ -11,7 +11,7 @@ interface QuickAddModalProps {
 }
 
 export default function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps) {
-  const { people, createPerson, createParentRelationship, showToast } = useFamilyStore();
+  const { people, coupleRelationships, createPerson, createParentRelationship, createCoupleRelationship, showToast } = useFamilyStore();
 
   // Basic Info state
   const [firstName, setFirstName] = useState('');
@@ -117,6 +117,26 @@ export default function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddMo
       return;
     }
 
+    // Validate Father section if enabled
+    if (fatherSelectionMode === 'quick-create' && !fatherFirstName.trim()) {
+      showToast("Please enter the father's first name, or close the Father section.", "error");
+      return;
+    }
+    if (fatherSelectionMode === 'select' && !selectedFatherId) {
+      showToast("Please select a father, or close the Father section.", "error");
+      return;
+    }
+
+    // Validate Mother section if enabled
+    if (motherSelectionMode === 'quick-create' && !motherFirstName.trim()) {
+      showToast("Please enter the mother's first name, or close the Mother section.", "error");
+      return;
+    }
+    if (motherSelectionMode === 'select' && !selectedMotherId) {
+      showToast("Please select a mother, or close the Mother section.", "error");
+      return;
+    }
+
     try {
       // 1. If quick creating father, do it first
       let fatherId = selectedFatherId;
@@ -171,6 +191,26 @@ export default function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddMo
           relationshipNature: motherNature,
           nonBiologicalType: motherNature === 'non-biological' ? motherNonBioType : undefined,
         });
+      }
+
+      // 5. Automatically link parents as a couple if both are set and not already linked
+      if (fatherSelectionMode !== 'none' && fatherId && motherSelectionMode !== 'none' && motherId) {
+        const alreadyLinked = coupleRelationships.some(c => 
+          !c.isDeleted && 
+          ((c.personId1 === fatherId && c.personId2 === motherId) ||
+           (c.personId1 === motherId && c.personId2 === fatherId))
+        );
+        if (!alreadyLinked) {
+          try {
+            await createCoupleRelationship({
+              personId1: fatherId,
+              personId2: motherId,
+              relationshipType: 'spouse',
+            });
+          } catch (coupleErr) {
+            console.warn("Failed to automatically link parents as a couple", coupleErr);
+          }
+        }
       }
 
       showToast(`Successfully created ${newPerson.firstName}!`);

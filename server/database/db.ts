@@ -446,6 +446,35 @@ export class DatabaseEngine {
     `);
     stmt.run(id, rel.parentId, rel.childId, rel.parentRole, rel.relationshipNature, rel.nonBiologicalType || null);
 
+    // Auto-create couple relationship with other parents of this child if it doesn't already exist
+    try {
+      const otherParents = sqlDb.prepare(`
+        SELECT parentId FROM parent_relationships 
+        WHERE childId = ? AND isDeleted = 0 AND parentId != ?
+      `).all(rel.childId, rel.parentId) as any[];
+
+      for (const op of otherParents) {
+        const opId = op.parentId;
+        const coupleExists = (sqlDb.prepare(`
+          SELECT count(*) as count FROM couple_relationships 
+          WHERE isDeleted = 0 AND (
+            (personId1 = ? AND personId2 = ?) OR 
+            (personId1 = ? AND personId2 = ?)
+          )
+        `).get(rel.parentId, opId, opId, rel.parentId) as any).count > 0;
+
+        if (!coupleExists) {
+          const coupleId = `c-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+          sqlDb.prepare(`
+            INSERT INTO couple_relationships (id, personId1, personId2, relationshipType, isDeleted)
+            VALUES (?, ?, ?, 'spouse', 0)
+          `).run(coupleId, rel.parentId, opId);
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to automatically link parents as a couple on the server", err);
+    }
+
     return {
       ...rel,
       id,

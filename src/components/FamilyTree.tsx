@@ -177,9 +177,10 @@ export default function FamilyTree() {
       visited.clear(); // reset visited for descendant path
       traverseDescendants(rootPersonId, 0, generationsCount);
       
-      // Add spouses of visible people
+      // Add spouses of visible people AND co-parents of visible children
       const visibleArray = Array.from(visibleNodeIds);
       for (const vId of visibleArray) {
+        // 1. Spouses of visible people
         const couples = activeCouples.filter(c => c.personId1 === vId || c.personId2 === vId);
         for (const c of couples) {
           const spouseId = c.personId1 === vId ? c.personId2 : c.personId1;
@@ -192,6 +193,29 @@ export default function FamilyTree() {
               const layerNum = Number(personLayer);
               if (!layers[layerNum].includes(spouseId)) {
                 layers[layerNum].push(spouseId);
+              }
+            }
+          }
+        }
+
+        // 2. Co-parents of visible children: if child vId is visible, ensure all parents are visible
+        const parentIds = parentsMap[vId] || [];
+        if (parentIds.length > 0) {
+          const childLayerStr = Object.keys(layers).find(k => layers[Number(k)].includes(vId));
+          if (childLayerStr !== undefined) {
+            const childLayerNum = Number(childLayerStr);
+            const parentLayerNum = childLayerNum - 1;
+            
+            for (const pId of parentIds) {
+              const parent = activePeople.find(p => p.id === pId);
+              if (parent) {
+                visibleNodeIds.add(pId);
+                if (!layers[parentLayerNum]) {
+                  layers[parentLayerNum] = [];
+                }
+                if (!layers[parentLayerNum].includes(pId)) {
+                  layers[parentLayerNum].push(pId);
+                }
               }
             }
           }

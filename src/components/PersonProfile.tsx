@@ -110,10 +110,10 @@ export default function PersonProfile() {
   const relatives = calculateRelationships(person.id, people, parentRelationships, coupleRelationships);
 
   const immediateFamily = {
-    parents: relatives.filter(r => r.relation === 'Father' || r.relation === 'Mother'),
-    siblings: relatives.filter(r => r.relation === 'Brother' || r.relation === 'Sister' || r.relation === 'Sibling'),
-    spouses: relatives.filter(r => r.relation === 'Spouse' || r.relation === 'Partner'),
-    children: relatives.filter(r => r.relation === 'Son' || r.relation === 'Daughter' || r.relation === 'Child'),
+    parents: relatives.filter(r => r.relation.startsWith('Father') || r.relation.startsWith('Mother') || r.relation.startsWith('Parent')),
+    siblings: relatives.filter(r => r.relation.includes('Brother') || r.relation.includes('Sister') || r.relation.includes('Sibling')),
+    spouses: relatives.filter(r => r.relation.includes('Spouse') || r.relation.includes('Partner') || r.relation.includes('Husband') || r.relation.includes('Wife')),
+    children: relatives.filter(r => r.relation.includes('Son') || r.relation.includes('Daughter') || r.relation.includes('Child')),
   };
 
   // Chronicled Events filtered to this person

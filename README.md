@@ -28,7 +28,9 @@
 * **Milestone Chronicle Timeline**: Track and filter historical milestones—births, weddings, graduations, achievements, and memoriam pages—tagging specific relatives dynamically.
 
 ### 5. Safe & Durable Data Persistence
-* **Instant Offline-First JSON Backups**: Import, export, and fully restore complete family datasets locally without third-party surveillance or tracking.
+* **SQLite File-Backed Relational Engine**: Fully powered by high-performance SQLite with WAL journaling and a custom relational ORM layer for local, zero-latency persistence. 
+* **Seamless Legacy Migration**: Automatically detects and migrates existing JSON files into your secure SQLite database.
+* **Instant Offline Backups**: Import, export, and fully restore complete family datasets locally without third-party surveillance or cloud leaks.
 * **Safe Profile Deletion**: Protect family tree integrity with full-context confirmation popups mapping all unlinked relationships (such as fathers, spouses, and descendants) before any delete operations.
 
 ---
@@ -36,7 +38,7 @@
 ## 🛠️ Technology Stack
 
 * **Frontend**: React 19, TypeScript, Tailwind CSS v4, Motion (Animation library)
-* **Backend**: Node.js, Express, Multer (Local memory uploads)
+* **Backend**: Node.js, Express, SQLite (`better-sqlite3`), Multer (Local memory uploads)
 * **Build System**: Vite, Esbuild (Optimized CommonJS standalone bundling)
 * **State Management**: Zustand (Instant multi-branch reactive updates)
 * **Icons & Typography**: Lucide React, Inter (Sans-serif), JetBrains Mono (Technical detail)

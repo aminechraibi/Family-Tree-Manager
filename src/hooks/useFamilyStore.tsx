@@ -56,6 +56,7 @@ interface FamilyStore {
   exportBackupData: () => Promise<void>;
   importBackupValidate: (data: any) => Promise<{ valid: boolean; peopleCount: number; relationshipsCount: number; familyName: string }>;
   confirmImportBackup: (data: any) => Promise<void>;
+  clearDatabase: () => Promise<void>;
 }
 
 const FamilyStoreContext = createContext<FamilyStore | undefined>(undefined);
@@ -397,6 +398,18 @@ export function FamilyStoreProvider({ children }: { children: ReactNode }) {
     fetchData();
   };
 
+  const clearDatabase = async () => {
+    const res = await fetch('/api/database/empty', {
+      method: 'POST'
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Failed to clear database");
+    }
+    showToast("All family data successfully cleared!", "success");
+    fetchData();
+  };
+
   return (
     <FamilyStoreContext.Provider value={{
       people,
@@ -434,7 +447,8 @@ export function FamilyStoreProvider({ children }: { children: ReactNode }) {
       restoreBackupFromDisk,
       exportBackupData,
       importBackupValidate,
-      confirmImportBackup
+      confirmImportBackup,
+      clearDatabase
     }}>
       {children}
     </FamilyStoreContext.Provider>

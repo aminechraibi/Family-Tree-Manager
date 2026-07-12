@@ -357,6 +357,12 @@ app.post('/api/backup/import/confirm', wrap((req: any, res: any) => {
   }
 }));
 
+// Empty database endpoint
+app.post('/api/database/empty', wrap((req: any, res: any) => {
+  db.clearDatabase();
+  res.json({ success: true, message: "Database successfully cleared!" });
+}));
+
 // List local backups on server disk
 app.get('/api/backup/list', wrap((req: any, res: any) => {
   const backupsDir = path.join(process.cwd(), 'data/backups');

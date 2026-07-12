@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Save, Sparkles, Sliders, Globe } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Sparkles, Sliders, Globe, Trash2, AlertTriangle } from 'lucide-react';
 import { useFamilyStore } from '../hooks/useFamilyStore';
 
 export default function SettingsPage() {
-  const { settings, updateSettings, showToast } = useFamilyStore();
+  const { settings, updateSettings, clearDatabase, showToast } = useFamilyStore();
 
   const [familyName, setFamilyName] = useState('');
+  const [showConfirm, setShowConfirm] = useState(false);
   const [dateFormat, setDateFormat] = useState('YYYY-MM-DD');
   const [language, setLanguage] = useState('en');
   const [imageSummariesEnabled, setImageSummariesEnabled] = useState(false);
@@ -139,6 +140,64 @@ export default function SettingsPage() {
           </div>
 
         </form>
+      </div>
+
+      {/* Danger Zone: Empty Database */}
+      <div className="max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-rose-200 dark:border-rose-950/40 p-6 space-y-4">
+        <div className="flex items-center space-x-2.5 pb-2.5 border-b border-rose-100 dark:border-rose-950/30">
+          <Trash2 className="w-5 h-5 text-rose-500 shrink-0" />
+          <h3 className="font-bold text-sm text-rose-900 dark:text-rose-400 uppercase tracking-wider">Danger Zone</h3>
+        </div>
+        
+        <div className="space-y-4">
+          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+            Emptying the database will permanently delete all family tree profiles, parent-child links, spouse partnerships, photo memories, and historical milestones. This action is irreversible.
+          </p>
+
+          {!showConfirm ? (
+            <button
+              type="button"
+              onClick={() => setShowConfirm(true)}
+              className="px-4 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-xs font-bold rounded-xl border border-rose-100 dark:border-rose-950/40 shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer animate-in fade-in"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Empty Database from Sample Data</span>
+            </button>
+          ) : (
+            <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-200 dark:border-rose-900/40 rounded-xl p-4 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+              <div className="flex items-center space-x-2 text-rose-700 dark:text-rose-400">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span className="text-xs font-bold">Are you absolutely sure you want to proceed?</span>
+              </div>
+              <p className="text-[10px] text-rose-600 dark:text-rose-500/90 leading-normal">
+                This will wipe the entire SQLite database file clean. All custom relatives and media records you created, alongside the default Moroccan-themed sample tree, will be lost forever.
+              </p>
+              <div className="flex items-center space-x-2 pt-1">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await clearDatabase();
+                      setShowConfirm(false);
+                    } catch (err) {
+                      showToast("Failed to empty database", "error");
+                    }
+                  }}
+                  className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-lg shadow-sm cursor-pointer"
+                >
+                  Yes, Empty Database
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(false)}
+                  className="px-3 py-1.5 bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-semibold rounded-lg cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
     </div>

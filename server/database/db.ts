@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import Database from 'better-sqlite3';
+import { DatabaseSync } from 'node:sqlite';
 import { Person, ParentRelationship, CoupleRelationship, validateParentRelationship } from '../../src/utils/relationshipCalculator';
 
 export interface Event {
@@ -89,7 +89,7 @@ const DEFAULT_SETTINGS: Settings = {
   apiModel: "gpt-4o-mini"
 };
 
-let sqlDb: Database.Database;
+let sqlDb: DatabaseSync;
 
 export class DatabaseEngine {
   constructor() {
@@ -107,10 +107,10 @@ export class DatabaseEngine {
   }
 
   private initDatabase() {
-    sqlDb = new Database(SQLITE_FILE);
+    sqlDb = new DatabaseSync(SQLITE_FILE);
     
     // Enable WAL mode for high concurrency & performance
-    sqlDb.pragma('journal_mode = WAL');
+    sqlDb.exec('PRAGMA journal_mode = WAL');
 
     // Create DB Schema
     sqlDb.exec(`
@@ -712,7 +712,8 @@ export class DatabaseEngine {
   }
 
   private restoreBackupInternal(data: any) {
-    sqlDb.transaction(() => {
+    sqlDb.exec('BEGIN');
+    try {
       sqlDb.prepare("DELETE FROM people").run();
       sqlDb.prepare("DELETE FROM parent_relationships").run();
       sqlDb.prepare("DELETE FROM couple_relationships").run();
@@ -836,7 +837,11 @@ export class DatabaseEngine {
 
       const settingsVal = data.settings || DEFAULT_SETTINGS;
       sqlDb.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('main_settings', ?)").run(JSON.stringify(settingsVal));
-    })();
+      sqlDb.exec('COMMIT');
+    } catch (err) {
+      sqlDb.exec('ROLLBACK');
+      throw err;
+    }
   }
 
   public getBackupData(): any {
@@ -863,7 +868,8 @@ export class DatabaseEngine {
   }
 
   public clearDatabase() {
-    sqlDb.transaction(() => {
+    sqlDb.exec('BEGIN');
+    try {
       sqlDb.prepare("DELETE FROM people").run();
       sqlDb.prepare("DELETE FROM parent_relationships").run();
       sqlDb.prepare("DELETE FROM couple_relationships").run();
@@ -873,6 +879,10 @@ export class DatabaseEngine {
       sqlDb.prepare("DELETE FROM photo_people").run();
       sqlDb.prepare("DELETE FROM history").run();
       sqlDb.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('main_settings', ?)").run(JSON.stringify(DEFAULT_SETTINGS));
-    })();
+      sqlDb.exec('COMMIT');
+    } catch (err) {
+      sqlDb.exec('ROLLBACK');
+      throw err;
+    }
   }
 }
